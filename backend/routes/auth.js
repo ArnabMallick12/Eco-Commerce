@@ -25,6 +25,7 @@ router.post("/signup", async (req, res) => {
 // ✅ Login Route
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
+  console.log("post req recivied in login")
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -55,6 +56,5 @@ router.get("/dashboard", async (req, res) => {
   }
 });
 
-// ✅ Logout is handled on the frontend by removing JWT
 
 module.exports = router;

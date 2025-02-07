@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/product");
 const orderRoutes = require("./routes/orders");
@@ -8,6 +9,8 @@ const session = require("express-session");
 
 const app = express();
 
+
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
@@ -41,7 +44,7 @@ app.listen(port, ()=>{
     console.log(`Sever running on port : ${port}`);
 });
 
-app.use("/", authRoutes);
+app.use("/auth", authRoutes);
 
 app.use("/products", productRoutes);
 
