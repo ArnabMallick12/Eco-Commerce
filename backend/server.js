@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/product");
+const orderRoutes = require("./routes/orders");
+const cartRoutes = require("./routes/cart");
 const session = require("express-session");
 
 const app = express();
@@ -42,6 +44,11 @@ app.listen(port, ()=>{
 app.use("/", authRoutes);
 
 app.use("/products", productRoutes);
+
+app.use("/orders", orderRoutes);
+
+app.use("/cart", cartRoutes);
+
 
 
 app.get('/',(req,res)=>{
