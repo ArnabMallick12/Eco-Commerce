@@ -4,11 +4,35 @@ import { Leaf } from 'lucide-react';
 
 export const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle authentication here
+    const endpoint = isLogin ? "/login" : "/signup";
+    const payload = isLogin ? { email: formData.email, password: formData.password } : formData;
+
+      const response = await fetch(`http://localhost:3000/auth${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.msg || "Something went wrong!");
+      }
+
+      // Store JWT token in local storage
+      localStorage.setItem("token", data.token);
     navigate('/');
   };
 
@@ -37,6 +61,7 @@ export const Login = () => {
                 id="email"
                 name="email"
                 type="email"
+                onChange={handleChange}
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
               />
@@ -53,6 +78,7 @@ export const Login = () => {
                 id="password"
                 name="password"
                 type="password"
+                onChange={handleChange}
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
               />
