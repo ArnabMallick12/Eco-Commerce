@@ -41,7 +41,7 @@ const products = {
   ]
 };
 
-const CategoryPage = () => {
+export default function CategoryPage (){
   const { category } = useParams();
   const categoryProducts = category ? products[category] || [] : [];
 
@@ -67,4 +67,4 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage;
+// export default CategoryPage;
