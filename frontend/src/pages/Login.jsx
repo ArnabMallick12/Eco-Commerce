@@ -26,7 +26,7 @@ export const Login = () => {
   
       console.log("📦 Sending data to backend:", payload); // ✅ Debugging log
   
-      const response = await fetch(`http://localhost:3000/auth${endpoint}`, {
+      const response = await fetch(`https://eco-commerce-2vxl.onrender.com/auth${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -40,7 +40,7 @@ export default function AddProduct() {
     });
 
     try {
-      const response = await fetch("http://localhost:3000/products/add", {
+      const response = await fetch("https://eco-commerce-2vxl.onrender.com/products/add", {
         method: "POST",
         body: data,
       });

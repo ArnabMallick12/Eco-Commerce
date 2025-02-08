@@ -51,7 +51,7 @@ export default function CategoryPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/products/category/${category}`);
+        const response = await fetch(`https://eco-commerce-2vxl.onrender.com/products/category/${category}`);
         const data = await response.json();
 
         if (!response.ok) throw new Error(data.message || "Error fetching products");

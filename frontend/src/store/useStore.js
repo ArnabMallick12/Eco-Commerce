@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 // Backend URL
-const API_URL = "http://localhost:3000/cart";
+const API_URL = "https://eco-commerce-2vxl.onrender.com/cart";
 
 export const useStore = create((set, get) => ({
   cart: [],
@@ -15,7 +15,7 @@ export const useStore = create((set, get) => ({
     if (!user) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/user/${user.id}/rewards`);
+      const response = await fetch(`https://eco-commerce-2vxl.onrender.com/user/${user.id}/rewards`);
       const data = await response.json();
 
       console.log("🏆 Updated user data after checkout:", data);
@@ -155,7 +155,7 @@ export const useStore = create((set, get) => ({
       console.log("🛒 Using database cart for checkout:", JSON.stringify(cart, null, 2));
   
       // ✅ Send checkout request using cart from database
-      const checkoutResponse = await fetch("http://localhost:3000/checkout", {
+      const checkoutResponse = await fetch("https://eco-commerce-2vxl.onrender.com/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user.id, cart }),
