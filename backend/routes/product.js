@@ -75,7 +75,7 @@ router.post("/add", upload.single("image"), async (req, res) => {
     const rewardPoints = calculateRewardPoints([material_str]);;
 
     // ✅ Image URL
-    const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`;
+    const imageUrl = `https://www.google.com/imgres?q=chair&imgurl=https%3A%2F%2Fwww.nilkamalfurniture.com%2Fcdn%2Fshop%2Ffiles%2FPARDSRDB_SRB_IVR_600x.jpg%3Fv%3D1699420541&imgrefurl=https%3A%2F%2Fwww.nilkamalfurniture.com%2Fproducts%2Fnilkamal-paradise-plastic-arm-chair-ratian-dark-beige-season-rust-brown-ivory&docid=32hw-WjSDPPKsM&tbnid=PO7JQpYPa8EJYM&vet=12ahUKEwjH3u3h2rSLAxW7bfUHHcIpMpoQM3oECBoQAA..i&w=600&h=600&hcb=2&ved=2ahUKEwjH3u3h2rSLAxW7bfUHHcIpMpoQM3oECBoQAA`;
 
     // ✅ Create & Save Product
     const newProduct = new Product({
