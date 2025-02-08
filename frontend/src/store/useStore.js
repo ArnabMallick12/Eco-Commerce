@@ -8,10 +8,10 @@ export const useStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem("user")) || null,
   setUser: (user) => set({ user }),
   purchaseHistory: [],
-  totalCarbonFootprint: 0,
+  totalCarbonFootprint: 0, // ✅ Initialize total carbon footprint
 
-   // ✅ Fetch User Rewards & Purchase History
-   fetchUserData: async () => {
+  // ✅ Fetch User Data including previous carbon footprint
+  fetchUserData: async () => {
     const user = get().user;
     if (!user) return;
 
@@ -24,10 +24,35 @@ export const useStore = create((set, get) => ({
       set({
         user: { ...user, rewardPoints: data.rewardPoints },
         purchaseHistory: data.purchaseHistory || [],
-        totalCarbonFootprint: data.totalCarbonFootprint || 0, // ✅ Store purchase history
+        totalCarbonFootprint: data.totalCarbonFootprint || 0, // ✅ Fetch & Store Total Carbon Footprint
       });
     } catch (error) {
       console.error("❌ Error fetching updated user data:", error);
+    }
+  },
+
+  // ✅ Fetch Purchase History including total carbon footprint
+  fetchPurchaseHistory: async () => {
+    const user = get().user;
+    if (!user) return;
+
+    try {
+      const response = await fetch(`${API_URL}/orders/${user.id}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Failed to fetch orders");
+
+      // ✅ Calculate cumulative carbon footprint of all previous orders
+      const previousCarbonFootprint = data.orders.reduce((total, order) => total + order.totalCarbonFootprint, 0);
+
+      set({
+        purchaseHistory: data.orders || [],
+        totalCarbonFootprint: previousCarbonFootprint, // ✅ Store total accumulated carbon footprint
+      });
+
+      console.log("📜 Purchase history updated:", get().purchaseHistory);
+    } catch (error) {
+      console.error("❌ Error fetching purchase history:", error);
     }
   },
 
@@ -37,30 +62,9 @@ export const useStore = create((set, get) => ({
     return purchaseHistory.reduce((total, item) => total + item.totalPrice, 0);
   },
 
-  // ✅ Fetch Cart from Backend
-  fetchCart: async () => {
-    const user = get().user;
-    if (!user) return;
-
-    try {
-      const response = await fetch(`${API_URL}/${user.id}`);
-      const data = await response.json();
-      // console.log("📦 Fetched cart data:", data);
-
-      if (!data.items || !Array.isArray(data.items)) {
-        // console.error("❌ Cart response format is incorrect:", data);
-        return;
-      }
-
-      set({ cart: data.items }); // ✅ Store only the array of items
-    } catch (error) {
-      // console.error("❌ Error fetching cart:", error);
-    }
-  },
-
-   // ✅ Get Total Carbon Footprint
-   getTotalCarbonFootprint: () => {
-    return get().totalCarbonFootprint; // ✅ Returns stored carbon footprint
+  // ✅ Get Total Carbon Footprint
+  getTotalCarbonFootprint: () => {
+    return get().totalCarbonFootprint; // ✅ Returns stored total carbon footprint
   },
 
   // ✅ Add to Cart (Sends request to backend)
@@ -99,7 +103,7 @@ export const useStore = create((set, get) => ({
         name: product.name,
         price: product.price,
         rewardPoints: product.rewardPoints,
-        carbonFootprint : product.carbonFootprint,
+        carbonFootprint: product.carbonFootprint, // ✅ Include Carbon Footprint
         imageUrl: product.imageUrl,
       };
   
@@ -112,29 +116,6 @@ export const useStore = create((set, get) => ({
       console.error("❌ Error adding to cart:", error);
     }
   },
-
-   // ✅ Fetch Purchase History & Carbon Footprint
-   fetchPurchaseHistory: async () => {
-    const user = get().user;
-    if (!user) return;
-
-    try {
-      const response = await fetch(`${API_URL}/orders/${user.id}`);
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || "Failed to fetch orders");
-
-      set({
-        purchaseHistory: data.orders || [],
-        totalCarbonFootprint: data.totalCarbonFootprint || 0, // ✅ Store total carbon footprint
-      });
-
-      console.log("📜 Purchase history updated:", get().purchaseHistory);
-    } catch (error) {
-      console.error("❌ Error fetching purchase history:", error);
-    }
-  },
-  
 
   // ✅ Remove from Cart (Sync with Backend)
   removeFromCart: async (productId) => {
@@ -183,6 +164,9 @@ export const useStore = create((set, get) => ({
       if (cart.length === 0) return alert("Cart is empty");
   
       console.log("🛒 Using database cart for checkout:", JSON.stringify(cart, null, 2));
+
+      // ✅ Calculate new total carbon footprint
+      const newCarbonFootprint = cart.reduce((total, item) => total + item.carbonFootprint, 0);
   
       // ✅ Send checkout request using cart from database
       const checkoutResponse = await fetch("https://eco-commerce-2vxl.onrender.com/checkout", {
@@ -195,19 +179,21 @@ export const useStore = create((set, get) => ({
       if (!checkoutResponse.ok) throw new Error(checkoutData.error || "Checkout failed");
   
       console.log("✅ Checkout successful:", checkoutData);
-  
-      // ✅ Fetch updated user rewards
+
+      // ✅ Fetch updated user rewards & purchase history
       await get().fetchUserData();
       await get().fetchPurchaseHistory();
-  
-      // ✅ Clear cart in Zustand state (Frontend cart)
-      set({ cart: [] });
-  
-      alert("Order placed successfully! Your rewards have been updated.");
+
+      // ✅ Update the frontend with new total carbon footprint
+      set((state) => ({
+        cart: [],
+        totalCarbonFootprint: state.totalCarbonFootprint + newCarbonFootprint, // ✅ Accumulate previous + new carbon footprint
+      }));
+
+      alert("Order placed successfully! Your rewards & carbon footprint have been updated.");
     } catch (error) {
       console.error("❌ Error during checkout:", error);
     }
   },
-  
-  
+
 }));

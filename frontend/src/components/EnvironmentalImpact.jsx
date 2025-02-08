@@ -8,6 +8,8 @@ export const EnvironmentalImpact = () => {
     fetchUserData: state.fetchUserData,
     totalCarbonFootprint: state.totalCarbonFootprint,
   }));
+  const { getTotalCarbonFootprint } = useStore();
+  const totalCarbon = getTotalCarbonFootprint();
 
   // Fetch user data when component mounts
   useEffect(() => {
@@ -34,7 +36,7 @@ export const EnvironmentalImpact = () => {
           <h3 className="font-medium text-lg">Total Carbon Footprint</h3>
         </div>
         <p className="text-3xl font-bold text-green-600 mt-2">
-          {totalCarbonFootprint.toFixed(1)} kg CO₂
+          {totalCarbon} kg CO₂
         </p>
         <p className="text-sm text-gray-600 mt-2">
           Your total impact from all purchases so far.
