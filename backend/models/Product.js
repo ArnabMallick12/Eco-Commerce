@@ -1,16 +1,22 @@
 const mongoose = require("mongoose");
 
-const ProductSchema = new mongoose.Schema({
+const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  category: { type: String, required: true },
+  category: {
+    type: String,
+    required: true,
+    enum: ["furniture", "lighting", "wallArt", "rugs", "curtains", "tableware", "bedding", "plants", "storage", "clocks"],
+  },
+  description: String,
   material: { type: String, required: true },
   weight: { type: Number, required: true },
   sizeFactor: { type: Number, required: true },
   price: { type: Number, required: true },
-  carbonFootprint: { type: Number, default: 0 },
-  rewardPoints: { type: Number, default: 0 },
-  imageUrl: { type: String, default: "" }, // Store image path or URL
-  createdAt: { type: Date, default: Date.now }
+  imageUrl: { type: String, required: true },
+  carbonFootprint: { type: Number, required: true },
+  rewardPoints: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("Product", ProductSchema);
+// ✅ Use `module.exports` instead of `export default`
+module.exports = mongoose.model("Product", productSchema);

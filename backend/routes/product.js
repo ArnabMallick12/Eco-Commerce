@@ -1,6 +1,8 @@
 const express = require("express");
+const multer = require("multer");
 const Product = require("../models/Product");
 const { calculateCarbonFootprint } = require("../utils/carbonFootprint");
+const { calculateRewardPoints } = require("../utils/rewardPoints");
 const router = express.Router();
 
 // ✅ Get All Products (READ)
@@ -41,31 +43,60 @@ router.get("/category/:category", async (req, res) => {
 });
 
 
-// ✅ Create Product (CREATE)
-router.post("/add", async (req, res) => {
-  const { name, category, material, weight, sizeFactor, price } = req.body;
+// ✅ Multer Storage for Image Upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+const upload = multer({ storage });
 
+// ✅ Add Product Route
+router.post("/add", upload.single("image"), async (req, res) => {
   try {
-    const carbonFootprint = await calculateCarbonFootprint(material, weight, sizeFactor);
+    const { name, category, description, material, weight, sizeFactor, price } = req.body;
 
-    if (carbonFootprint === null) {
-      return res.status(400).json({ error: "Invalid material name" });
+    if (!req.file) {
+      return res.status(400).json({ error: "Image is required" });
     }
 
+    // ✅ Compute Carbon Footprint
+    const material_str = material.toLowerCase();
+    console.log(material_str);
+    const carbonFootprint = await calculateCarbonFootprint(material_str, weight, sizeFactor);
+    if (carbonFootprint === null) {
+      return res.status(400).json({ error: "Invalid material for emission factor" });
+    }
+
+    // ✅ Compute Reward Points
+    const rewardPoints = calculateRewardPoints([material_str]);;
+
+    // ✅ Image URL
+    const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`;
+
+    // ✅ Create & Save Product
     const newProduct = new Product({
       name,
       category,
+      description,
       material,
       weight,
       sizeFactor,
       price,
-      carbonFootprint
+      imageUrl,
+      carbonFootprint,
+      rewardPoints,
     });
 
     await newProduct.save();
     res.status(201).json({ message: "Product added successfully!", product: newProduct });
+
   } catch (error) {
-    res.status(500).json({ error: "Error creating product" });
+    console.error("❌ Error adding product:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

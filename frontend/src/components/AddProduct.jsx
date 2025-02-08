@@ -16,11 +16,11 @@ export default function AddProduct() {
   });
 
   const materials = [
-    "Wood", "Metal", "Plastic", "Glass", "Ceramic", "Fabric", "Stone", "Leather",
-    "Bamboo", "Concrete", "Acrylic", "Resin", "Marble", "Granite", "Rattan", "Jute",
-    "Paper", "Cork", "Foam", "Rubber", "Carbon Fiber", "Fiberglass", "Polycarbonate",
-    "Stainless Steel", "Brass", "Copper", "Aluminum", "Iron", "Silver", "Gold"
+    "Softwood", "Hardwood", "Plywood", "Aluminum", "Steel", "Stainless Steel",
+    "Copper", "Glass", "Tempered Glass", "Acrylic", "Polyethylene", "Polypropylene",
+    "PVC", "Cotton", "Wool", "Silk", "Polyester", "Bamboo", "Ceramic", "Jute", "Cork"
   ];
+  
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -35,25 +35,27 @@ export default function AddProduct() {
     e.preventDefault();
 
     const data = new FormData();
-    Object.keys(formData).forEach(key => {
+    Object.keys(formData).forEach((key) => {
       data.append(key, formData[key]);
     });
 
     try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
-        body: data
+      const response = await fetch("http://localhost:3000/products/add", {
+        method: "POST",
+        body: data,
       });
 
-      if (response.ok) {
-        navigate('/');
-      } else {
-        throw new Error('Failed to add product');
-      }
+      const result = await response.json();
+
+      if (!response.ok) throw new Error(result.error || "Failed to add product");
+
+      alert("✅ Product added successfully!");
+      navigate("/");
     } catch (error) {
-      console.error('Error adding product:', error);
+      console.error("❌ Error adding product:", error);
     }
   };
+
 
   return (
     <div className="container mx-auto px-4 py-8">
