@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Leaf } from 'lucide-react';
+import { useStore } from "../store/useStore";
 
 export const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const setUser = useStore((state) => state.setUser);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -14,27 +16,45 @@ export const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const endpoint = isLogin ? "/login" : "/signup";
-    const payload = isLogin ? { email: formData.email, password: formData.password } : formData;
-
+    setError(""); // ✅ Reset error state
+  
+    try {
+      const endpoint = isLogin ? "/login" : "/signup";
+      const payload = isLogin
+        ? { email: formData.email, password: formData.password }
+        : formData;
+  
+      console.log("📦 Sending data to backend:", payload); // ✅ Debugging log
+  
       const response = await fetch(`http://localhost:3000/auth${endpoint}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
+  
       const data = await response.json();
-
+      console.log("✅ Received response from backend:", data); // ✅ Debugging log
+  
       if (!response.ok) {
         throw new Error(data.msg || "Something went wrong!");
       }
-
-      // Store JWT token in local storage
+  
+      if (!data.user || !data.user.email) {
+        throw new Error("Invalid response from server (missing user data)");
+      }
+  
       localStorage.setItem("token", data.token);
-    navigate('/');
+      localStorage.setItem("userEmail", data.user.email);
+      localStorage.setItem("userId", data.user.id);
+      setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      navigate("/");
+    } catch (error) {
+      console.error("❌ Login/Signup Error:", error);
+      setError(error.message); // ✅ Display error in UI
+    }
   };
+  
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -61,6 +81,7 @@ export const Login = () => {
                 id="email"
                 name="email"
                 type="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -78,6 +99,7 @@ export const Login = () => {
                 id="password"
                 name="password"
                 type="password"
+                value={formData.password}
                 onChange={handleChange}
                 required
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"

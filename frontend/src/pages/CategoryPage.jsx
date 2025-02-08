@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { ProductCard } from '../components/ProductCard';
+import { useState , useEffect} from 'react';
 
 // Extended products list with unique dummy data and real Unsplash images
 const products = {
@@ -41,9 +42,30 @@ const products = {
   ]
 };
 
-export default function CategoryPage (){
+export default function CategoryPage() {
   const { category } = useParams();
-  const categoryProducts = category ? products[category] || [] : [];
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/products/category/${category}`);
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.message || "Error fetching products");
+
+        setProducts(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [category]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -53,18 +75,23 @@ export default function CategoryPage (){
       <p className="text-gray-600 mb-8">
         Discover our eco-friendly {category} collection, designed with sustainability in mind.
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {categoryProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-      {categoryProducts.length === 0 && (
+
+      {loading && <p className="text-center text-gray-500">Loading products...</p>}
+      {error && <p className="text-center text-red-500">{error}</p>}
+
+      {!loading && !error && products.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500">No products found in this category.</p>
         </div>
       )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {products.map((product) => (
+          <ProductCard key={product._id} product={product} />
+        ))}
+      </div>
     </div>
   );
-};
+}
 
 // export default CategoryPage;

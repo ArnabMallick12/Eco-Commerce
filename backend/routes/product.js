@@ -6,9 +6,10 @@ const router = express.Router();
 // ✅ Get All Products (READ)
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find({}, "name price imageUrl rewardPoints"); // Include rewardPoints
     res.json(products);
-  } catch (err) {
+  } catch (error) {
+    console.error("❌ Error fetching products:", error);
     res.status(500).json({ error: "Error fetching products" });
   }
 });
@@ -24,6 +25,21 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ error: "Error fetching product details" });
   }
 });
+
+// ✅ Get Products by Category
+router.get("/category/:category", async (req, res) => {
+  try {
+    const { category } = req.params;
+    const products = await Product.find({ category });
+
+    if (!products.length) return res.status(404).json({ message: "No products found in this category." });
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching products" });
+  }
+});
+
 
 // ✅ Create Product (CREATE)
 router.post("/add", async (req, res) => {

@@ -1,93 +1,167 @@
 [
-    {
-      "name": "Organic Cotton T-Shirt",
-      "category": "Clothing",
-      "material": "Cotton",
-      "weight": 0.3,
-      "sizeFactor": 1.2,
-      "price": 25,
-      "carbonFootprint": 2.5
-    },
-    {
-      "name": "Recycled Plastic Water Bottle",
-      "category": "Accessories",
-      "material": "Plastic",
-      "weight": 0.5,
-      "sizeFactor": 1.1,
-      "price": 10,
-      "carbonFootprint": 5.8
-    },
-    {
-      "name": "Bamboo Toothbrush",
-      "category": "Personal Care",
-      "material": "Bamboo",
-      "weight": 0.1,
-      "sizeFactor": 0.8,
-      "price": 5,
-      "carbonFootprint": 1.2
-    },
-    {
-      "name": "Solar-Powered Phone Charger",
-      "category": "Electronics",
-      "material": "Metal",
-      "weight": 0.7,
-      "sizeFactor": 2.0,
-      "price": 50,
-      "carbonFootprint": 6.4
-    },
-    {
-      "name": "Reusable Stainless Steel Straw Set",
-      "category": "Accessories",
-      "material": "Metal",
-      "weight": 0.2,
-      "sizeFactor": 0.5,
-      "price": 8,
-      "carbonFootprint": 3.1
-    },
-    {
-      "name": "Hemp Grocery Bag",
-      "category": "Bags",
-      "material": "Hemp",
-      "weight": 0.4,
-      "sizeFactor": 1.3,
-      "price": 15,
-      "carbonFootprint": 2.9
-    },
-    {
-      "name": "Biodegradable Phone Case",
-      "category": "Electronics",
-      "material": "Bioplastic",
-      "weight": 0.3,
-      "sizeFactor": 1.1,
-      "price": 20,
-      "carbonFootprint": 3.5
-    },
-    {
-      "name": "Recycled Paper Notebook",
-      "category": "Stationery",
-      "material": "Recycled Paper",
-      "weight": 0.6,
-      "sizeFactor": 1.2,
-      "price": 12,
-      "carbonFootprint": 2.0
-    },
-    {
-      "name": "Wooden Hair Brush",
-      "category": "Personal Care",
-      "material": "Wood",
-      "weight": 0.5,
-      "sizeFactor": 1.4,
-      "price": 18,
-      "carbonFootprint": 4.0
-    },
-    {
-      "name": "Upcycled Denim Jacket",
-      "category": "Clothing",
-      "material": "Denim",
-      "weight": 1.0,
-      "sizeFactor": 2.5,
-      "price": 60,
-      "carbonFootprint": 7.5
-    }
-  ]
-  
+  {
+    "name": "Recycled Wood Table",
+    "category": "furniture",
+    "material": "reclaimed wood",
+    "weight": 30,
+    "sizeFactor": 1.5,
+    "price": 299,
+    "carbonFootprint": 30,
+    "rewardPoints": 150,
+    "imageUrl": "https://images.unsplash.com/photo-1532372320978-9b4d0a87e993"
+  },
+  {
+    "name": "Bamboo Sofa",
+    "category": "furniture",
+    "material": "bamboo",
+    "weight": 40,
+    "sizeFactor": 2,
+    "price": 499,
+    "carbonFootprint": 40,
+    "rewardPoints": 200,
+    "imageUrl": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc"
+  },
+  {
+    "name": "Minimalist Wooden Chair",
+    "category": "furniture",
+    "material": "wood",
+    "weight": 20,
+    "sizeFactor": 1,
+    "price": 199,
+    "carbonFootprint": 20,
+    "rewardPoints": 100,
+    "imageUrl": "https://images.unsplash.com/photo-1577140917170-285929fb55b7"
+  },
+  {
+    "name": "Eco-Friendly Bookshelf",
+    "category": "furniture",
+    "material": "wood",
+    "weight": 35,
+    "sizeFactor": 2,
+    "price": 350,
+    "carbonFootprint": 35,
+    "rewardPoints": 180,
+    "imageUrl": "https://images.unsplash.com/photo-1588200618450-3a18f1f7932e"
+  },
+  {
+    "name": "Organic Cotton Bean Bag",
+    "category": "furniture",
+    "material": "organic cotton",
+    "weight": 15,
+    "sizeFactor": 1,
+    "price": 150,
+    "carbonFootprint": 15,
+    "rewardPoints": 80,
+    "imageUrl": "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c"
+  },
+  {
+    "name": "Solar-Powered Lamp",
+    "category": "lighting",
+    "material": "solar",
+    "weight": 10,
+    "sizeFactor": 1,
+    "price": 99,
+    "carbonFootprint": 10,
+    "rewardPoints": 50,
+    "imageUrl": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c"
+  },
+  {
+    "name": "LED Bamboo Pendant",
+    "category": "lighting",
+    "material": "bamboo",
+    "weight": 12,
+    "sizeFactor": 1.5,
+    "price": 129,
+    "carbonFootprint": 12,
+    "rewardPoints": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15"
+  },
+  {
+    "name": "Hand-Painted Canvas",
+    "category": "wallArt",
+    "material": "canvas",
+    "weight": 20,
+    "sizeFactor": 1,
+    "price": 249,
+    "carbonFootprint": 20,
+    "rewardPoints": 100,
+    "imageUrl": "https://images.unsplash.com/photo-1526566662850-6247a4e10c76"
+  },
+  {
+    "name": "Organic Wool Rug",
+    "category": "rugs",
+    "material": "wool",
+    "weight": 30,
+    "sizeFactor": 2,
+    "price": 399,
+    "carbonFootprint": 30,
+    "rewardPoints": 120,
+    "imageUrl": "https://images.unsplash.com/photo-1600166898405-da9535204843"
+  },
+  {
+    "name": "Linen Blackout Curtains",
+    "category": "curtains",
+    "material": "linen",
+    "weight": 25,
+    "sizeFactor": 1.5,
+    "price": 199,
+    "carbonFootprint": 25,
+    "rewardPoints": 90,
+    "imageUrl": "https://images.unsplash.com/photo-1516455590571-18256e5bb9ff"
+  },
+  {
+    "name": "Bamboo Dinner Set",
+    "category": "tableware",
+    "material": "bamboo",
+    "weight": 10,
+    "sizeFactor": 1,
+    "price": 89,
+    "carbonFootprint": 10,
+    "rewardPoints": 50,
+    "imageUrl": "https://images.unsplash.com/photo-1617789160753-97fe86946851"
+  },
+  {
+    "name": "Organic Cotton Duvet",
+    "category": "bedding",
+    "material": "organic cotton",
+    "weight": 35,
+    "sizeFactor": 2,
+    "price": 299,
+    "carbonFootprint": 35,
+    "rewardPoints": 130,
+    "imageUrl": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af"
+  },
+  {
+    "name": "Aloe Vera Plant",
+    "category": "plants",
+    "material": "plant",
+    "weight": 5,
+    "sizeFactor": 1,
+    "price": 29,
+    "carbonFootprint": 5,
+    "rewardPoints": 40,
+    "imageUrl": "https://images.unsplash.com/photo-1485955900006-10f4d0a87e993"
+  },
+  {
+    "name": "Sustainable Storage Box",
+    "category": "storage",
+    "material": "recycled plastic",
+    "weight": 15,
+    "sizeFactor": 1.5,
+    "price": 79,
+    "carbonFootprint": 15,
+    "rewardPoints": 60,
+    "imageUrl": "https://images.unsplash.com/photo-1594626932480-8c00d8b6a3c6"
+  },
+  {
+    "name": "Handcrafted Wooden Clock",
+    "category": "clocks",
+    "material": "wood",
+    "weight": 20,
+    "sizeFactor": 1,
+    "price": 149,
+    "carbonFootprint": 20,
+    "rewardPoints": 70,
+    "imageUrl": "https://images.unsplash.com/photo-1525182008055-f88b95ff7980"
+  }
+]

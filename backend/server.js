@@ -4,10 +4,13 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/product");
 const orderRoutes = require("./routes/orders");
+const userRoutes = require("./routes/user");
 const cartRoutes = require("./routes/cart");
+const checkoutRoutes = require("./routes/checkout");
 const session = require("express-session");
 
 const app = express();
+app.use(express.json());
 
 
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
@@ -51,6 +54,10 @@ app.use("/products", productRoutes);
 app.use("/orders", orderRoutes);
 
 app.use("/cart", cartRoutes);
+
+app.use("/user", userRoutes);
+
+app.use("/checkout", checkoutRoutes);
 
 
 

@@ -1,10 +1,19 @@
-import React from 'react';
-import { Trophy, CreditCard } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import React, { useEffect } from "react";
+import { Trophy, CreditCard } from "lucide-react";
+import { useStore } from "../store/useStore";
 
 export const RewardsTracker = () => {
-  const { user, purchaseHistory } = useStore();
-  const totalSpent = purchaseHistory.reduce((total, item) => total + item.price, 0);
+  const { user, getTotalSpent, fetchUserData } = useStore((state) => ({
+    user: state.user,
+    getTotalSpent: state.getTotalSpent,
+    fetchUserData: state.fetchUserData,
+  }));
+
+  useEffect(() => {
+    fetchUserData(); // ✅ Fetch user rewards on mount
+  }, []);
+
+  // const totalSpent = purchaseHistory.reduce((total, item) => total + item.price, 0);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -28,7 +37,7 @@ export const RewardsTracker = () => {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Total Spent</h3>
             <p className="text-2xl font-bold text-purple-600">
-              ${totalSpent.toFixed(2)}
+              ${getTotalSpent().toFixed(2)}
             </p>
           </div>
         </div>

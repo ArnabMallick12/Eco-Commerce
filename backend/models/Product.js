@@ -8,6 +8,9 @@ const ProductSchema = new mongoose.Schema({
   sizeFactor: { type: Number, required: true },
   price: { type: Number, required: true },
   carbonFootprint: { type: Number, default: 0 },
+  rewardPoints: { type: Number, default: 0 },
+  imageUrl: { type: String, default: "" }, // Store image path or URL
+  createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model("Product", ProductSchema);

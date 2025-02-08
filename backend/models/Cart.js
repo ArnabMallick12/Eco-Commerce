@@ -8,6 +8,7 @@ const CartSchema = new mongoose.Schema({
       name: String,
       price: Number,
       carbonFootprint: Number,
+      points : Number,
       quantity: { type: Number, default: 1 }
     }
   ]
