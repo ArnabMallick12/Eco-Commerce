@@ -51,7 +51,7 @@ export default function Home() {
         </div>
 
         <RewardsTracker />
-        <EnvironmentalImpact />
+        {/* <EnvironmentalImpact /> */}
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           {categories.map((category) => (

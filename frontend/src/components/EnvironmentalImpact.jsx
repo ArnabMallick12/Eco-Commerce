@@ -30,7 +30,7 @@ export const EnvironmentalImpact = () => {
         Your Environmental Impact
       </h2>
 
-      <div className="bg-green-50 rounded-lg p-6">
+      <div className="bg-green-50 rounde  d-lg p-6">
         <div className="flex items-center gap-3 mb-2">
           <Cloud className="h-6 w-6 text-green-600" />
           <h3 className="font-medium text-lg">Total Carbon Footprint</h3>
