@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const initData = require("./data.json");
 const Listing = require("../models/Product.js");
 
-const MONGO_URL = "mongodb://127.0.0.1:27017/ecocommerce";
+const MONGO_URL = 'mongodb+srv://arnav12006:KKWzgqh6Uz7JFic6@cluster0.onqda.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/ecocommerce';
 
 main()
   .then(() => {

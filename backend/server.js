@@ -32,7 +32,7 @@ const port = 3000;
 
 
 require('dotenv/config');
-const mongo_url = process.env.MONGO_URL;
+const mongo_url = 'mongodb+srv://arnav12006:KKWzgqh6Uz7JFic6@cluster0.onqda.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/ecocommerce';
 main().then(()=>{
     console.log("Database was successfully connected!");
 }).catch((err)=>{
