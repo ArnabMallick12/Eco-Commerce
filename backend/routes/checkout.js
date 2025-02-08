@@ -18,6 +18,10 @@ router.post("/", async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
+    const totalCarbonFootprint = cart.items.reduce((sum, item) => 
+        sum + item.productId.carbonFootprint * item.quantity, 0
+      );
+
     console.log(`🔍 User before update: ${user.rewardPoints} points`);
 
     // ✅ Calculate Total Price & Reward Points
@@ -27,18 +31,21 @@ router.post("/", async (req, res) => {
     console.log(`✅ Earned Reward Points: ${earnedRewardPoints}`);
 
     // ✅ Create Order
-    const newOrder = new Order({
-      userId,
-      items: cart.map((item) => ({
-        productId: item._id,
-        name: item.name,
-        price: item.price,
-        rewardPoints: item.rewardPoints || 0, // ✅ Ensure reward points are stored
-      })),
-      totalPrice,
-    });
+    const order = new Order({
+        userId,
+        products: cart.items.map(item => ({
+          productId: item.productId._id,
+          name: item.productId.name,
+          price: item.productId.price,
+          carbonFootprint: item.productId.carbonFootprint,
+          quantity: item.quantity
+        })),
+        totalPrice: cart.items.reduce((sum, item) => sum + item.productId.price * item.quantity, 0),
+        totalCarbonFootprint: totalCarbonFootprint, // ✅ Save total carbon footprint
+        rewardPoints: cart.items.reduce((sum, item) => sum + item.productId.rewardPoints * item.quantity, 0)
+      });
 
-    await newOrder.save();
+    await order.save();
 
     // ✅ Update User's Reward Points in MongoDB
     user.rewardPoints = (user.rewardPoints || 0) + earnedRewardPoints;

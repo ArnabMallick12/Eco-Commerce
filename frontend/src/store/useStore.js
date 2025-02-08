@@ -8,6 +8,7 @@ export const useStore = create((set, get) => ({
   user: JSON.parse(localStorage.getItem("user")) || null,
   setUser: (user) => set({ user }),
   purchaseHistory: [],
+  totalCarbonFootprint: 0,
 
    // ✅ Fetch User Rewards & Purchase History
    fetchUserData: async () => {
@@ -22,7 +23,8 @@ export const useStore = create((set, get) => ({
 
       set({
         user: { ...user, rewardPoints: data.rewardPoints },
-        purchaseHistory: data.purchaseHistory || [], // ✅ Store purchase history
+        purchaseHistory: data.purchaseHistory || [],
+        totalCarbonFootprint: data.totalCarbonFootprint || 0, // ✅ Store purchase history
       });
     } catch (error) {
       console.error("❌ Error fetching updated user data:", error);
@@ -54,6 +56,11 @@ export const useStore = create((set, get) => ({
     } catch (error) {
       // console.error("❌ Error fetching cart:", error);
     }
+  },
+
+   // ✅ Get Total Carbon Footprint
+   getTotalCarbonFootprint: () => {
+    return get().totalCarbonFootprint; // ✅ Returns stored carbon footprint
   },
 
   // ✅ Add to Cart (Sends request to backend)
@@ -92,6 +99,7 @@ export const useStore = create((set, get) => ({
         name: product.name,
         price: product.price,
         rewardPoints: product.rewardPoints,
+        carbonFootprint : product.carbonFootprint,
         imageUrl: product.imageUrl,
       };
   
@@ -102,6 +110,28 @@ export const useStore = create((set, get) => ({
       console.log("✅ Updated cart:", get().cart);
     } catch (error) {
       console.error("❌ Error adding to cart:", error);
+    }
+  },
+
+   // ✅ Fetch Purchase History & Carbon Footprint
+   fetchPurchaseHistory: async () => {
+    const user = get().user;
+    if (!user) return;
+
+    try {
+      const response = await fetch(`${API_URL}/orders/${user.id}`);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Failed to fetch orders");
+
+      set({
+        purchaseHistory: data.orders || [],
+        totalCarbonFootprint: data.totalCarbonFootprint || 0, // ✅ Store total carbon footprint
+      });
+
+      console.log("📜 Purchase history updated:", get().purchaseHistory);
+    } catch (error) {
+      console.error("❌ Error fetching purchase history:", error);
     }
   },
   
@@ -168,6 +198,7 @@ export const useStore = create((set, get) => ({
   
       // ✅ Fetch updated user rewards
       await get().fetchUserData();
+      await get().fetchPurchaseHistory();
   
       // ✅ Clear cart in Zustand state (Frontend cart)
       set({ cart: [] });

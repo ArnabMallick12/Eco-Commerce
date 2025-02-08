@@ -3,8 +3,8 @@ import { Leaf, Cloud } from "lucide-react";
 import { useStore } from "../store/useStore";
 
 export const EnvironmentalImpact = () => {
-  const { purchaseHistory, fetchUserData } = useStore((state) => ({
-    purchaseHistory: state.purchaseHistory,
+  const { fetchPurchaseHistory, fetchUserData } = useStore((state) => ({
+    fetchPurchaseHistory: state.fetchPurchaseHistory,
     fetchUserData: state.fetchUserData,
   }));
 
