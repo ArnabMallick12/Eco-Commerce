@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "vercel": "^41.0.2"
+  },
+  "devDependencies": {
+    "vite": "^6.1.0"
   }
 }
