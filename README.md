@@ -1,6 +1,3 @@
-Here's a more detailed version of your GitHub README:  
-
----
 
 # Eco Decor 🌿  
 
