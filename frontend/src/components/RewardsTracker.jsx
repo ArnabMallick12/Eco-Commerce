@@ -37,7 +37,7 @@ export const RewardsTracker = () => {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Total Spent</h3>
             <p className="text-2xl font-bold text-purple-600">
-              ${getTotalSpent().toFixed(2)}
+              Rs.{getTotalSpent().toFixed(2)}
             </p>
           </div>
         </div>

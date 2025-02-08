@@ -14,7 +14,7 @@ export const ProductCard =  ({ product }) => {
         <h3 className="text-lg font-semibold">{product.name}</h3>
         <p className="text-gray-600 text-sm mt-1">{product.description}</p>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-xl font-bold">${product.price}</span>
+          <span className="text-xl font-bold">Rs.{product.price}</span>
           <div className="flex items-center space-x-2">
             <Leaf className="h-4 w-4 text-green-500" />
             <span className="text-sm text-green-600">{product.carbonFootprint}kg CO₂</span>
