@@ -1,91 +1,198 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const authRoutes = require("./routes/auth");
-const productRoutes = require("./routes/product");
-const orderRoutes = require("./routes/orders");
-const userRoutes = require("./routes/user");
-const cartRoutes = require("./routes/cart");
-const checkoutRoutes = require("./routes/checkout");
-const session = require("express-session");
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import multer from 'multer';
+import dotenv from 'dotenv';
+import session from 'express-session';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { mkdirSync } from 'fs';
+
+// Import utilities and models
+import { calculateCarbonFootprint } from './utils/carbonFootprint.js';
+import { calculateRewardPoints } from './utils/rewardPoints.js';
+import Product from './models/Product.js';
+
+// Import routes
+import authRoutes from './routes/auth.js';
+import productRoutes from './routes/product.js';
+import orderRoutes from './routes/orders.js';
+import userRoutes from './routes/user.js';
+import cartRoutes from './routes/cart.js';
+import checkoutRoutes from './routes/checkout.js';
+
+// Setup paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI || 'your_default_mongo_url';
+
+// Middleware
+app.use(cors({ origin: '*' }));
 app.use(express.json());
-
-
-app.use(cors({ origin: "*"}));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
-app.set("view engine", "ejs");
+app.use(express.static('public'));
+app.set('view engine', 'ejs');
 
 app.use(
-    session({
-      secret: "your_secret_key",
-      resave: false,
-      saveUninitialized: false,
-    })
-  );
+  session({
+    secret: 'your_secret_key',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
-const Product = require('./models/Product.js');
+// Ensure uploads directory exists
+const uploadsDir = join(__dirname, 'uploads');
+mkdirSync(uploadsDir, { recursive: true });
 
-const port = 3000;
+// Multer setup for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+});
+const upload = multer({ storage });
 
+// MongoDB Connection
+const connectToMongoDB = async () => {
+  try {
+    await mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log('✅ Connected to MongoDB');
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
+    setTimeout(connectToMongoDB, 5000);
+  }
+};
 
-require('dotenv/config');
-const mongo_url = 'mongodb+srv://arnav12006:KKWzgqh6Uz7JFic6@cluster0.onqda.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/ecocommerce';
-main().then(()=>{
-    console.log("Database was successfully connected!");
-}).catch((err)=>{
-    console.log(err);
+connectToMongoDB();
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected. Reconnecting...');
+  connectToMongoDB();
 });
 
-async function main(){
-    await mongoose.connect(mongo_url);
-}
+// Ensure DB connection before proceeding with requests
+const ensureDbConnection = async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    await connectToMongoDB();
+  }
+  next();
+};
 
-app.listen(port, ()=>{
-    console.log(`Sever running on port : ${port}`);
+// Debug Route
+app.get('/api/status', async (req, res) => {
+  const status = {
+    mongoConnection: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString(),
+  };
+  res.json(status);
 });
 
-app.use("/auth", authRoutes);
+// Routes
+app.use('/auth', authRoutes);
+app.use('/products', productRoutes);
+app.use('/orders', orderRoutes);
+app.use('/cart', cartRoutes);
+app.use('/user', userRoutes);
+app.use('/checkout', checkoutRoutes);
 
-app.use("/products", productRoutes);
+// API to add new products
+app.post('/api/products', ensureDbConnection, upload.single('image'), async (req, res) => {
+  try {
+    const { name, category, description, material, weight, sizeFactor, price } = req.body;
+    const imageUrl = `/uploads/${req.file.filename}`;
+    const carbonFootprint = await calculateCarbonFootprint(material, parseFloat(weight), parseFloat(sizeFactor));
+    const rewardPoints = calculateRewardPoints({ carbonFootprint });
 
-app.use("/orders", orderRoutes);
+    const product = new Product({
+      name, category, description, material,
+      weight: parseFloat(weight),
+      sizeFactor: parseFloat(sizeFactor),
+      price: parseFloat(price),
+      imageUrl, carbonFootprint, rewardPoints
+    });
 
-app.use("/cart", cartRoutes);
-
-app.use("/user", userRoutes);
-
-app.use("/checkout", checkoutRoutes);
-
-
-
-app.get('/',(req,res)=>{
-    res.send("Server is running now!")
+    await product.save();
+    res.status(201).json(product);
+  } catch (error) {
+    console.error('❌ Error adding product:', error);
+    res.status(500).json({ error: 'Failed to add product', details: error.message });
+  }
 });
 
-app.get('/products', async (req,res)=>{
-    const products = await Product.find({});
-    res.send(products);
+// Search products by query
+app.get('/api/products/search', ensureDbConnection, async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || query.trim().length === 0) return res.json([]);
+    
+    console.log('🔎 Searching for:', query);
+    const searchRegex = new RegExp(query.trim(), 'i');
+
+    const products = await Product.find({
+      $or: [
+        { name: searchRegex },
+        { description: searchRegex },
+        { category: searchRegex },
+        { material: searchRegex }
+      ]
+    }).select('-__v').lean().exec();
+
+    console.log(`✅ Found ${products.length} products`);
+    res.json(products);
+  } catch (error) {
+    console.error('❌ Search error:', error);
+    res.status(500).json({ error: 'Failed to search products', details: error.message });
+  }
 });
 
-app.get('/products/:id', async (req,res)=>{
-    let {id} = req.params;
-    const product = await Product.findById(id);
-    res.send(product);
+// Fetch products by category
+app.get('/api/products/:category', ensureDbConnection, async (req, res) => {
+  try {
+    const products = await Product.find({ category: req.params.category }).select('-__v').lean().exec();
+    res.json(products);
+  } catch (error) {
+    console.error('❌ Error fetching products:', error);
+    res.status(500).json({ error: 'Failed to fetch products', details: error.message });
+  }
 });
 
-// app.get('/testproduct',async (req,res)=>{
-//     let sample = new Product({
-//         name: "Organic Cotton T-Shirt",
-//     category: "Clothing",
-//     material: "Cotton",
-//     weight: 0.3,
-//     sizeFactor: 1.2,
-//     price: 25,
-//     carbonFootprint: 2.5
-//     });
-//     await sample.save();
-//     console.log("sample was saved")
-// });
+// Default Home Route
+app.get('/', (req, res) => {
+  res.send('🚀 Server is running!');
+});
+
+// Fetch all products
+app.get('/products', async (req, res) => {
+  const products = await Product.find({});
+  res.json(products);
+});
+
+// Fetch product by ID
+app.get('/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    res.json(product);
+  } catch (error) {
+    res.status(404).json({ error: 'Product not found' });
+  }
+});
+
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  res.status(500).json({ error: 'Internal server error', details: err.message });
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
