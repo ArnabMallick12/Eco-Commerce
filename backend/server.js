@@ -30,7 +30,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'your_default_mongo_url';
+const MONGO_URI = process.env.MONGO_URI;
 
 // Middleware
 app.use(cors({ origin: '*' }));
@@ -41,7 +41,7 @@ app.set('view engine', 'ejs');
 
 app.use(
   session({
-    secret: 'your_secret_key',
+    secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
   })
@@ -132,6 +132,7 @@ app.post('/api/products', ensureDbConnection, upload.single('image'), async (req
 app.get('/api/products/search', ensureDbConnection, async (req, res) => {
   try {
     const { query } = req.query;
+    console.log(query);
     if (!query || query.trim().length === 0) return res.json([]);
     
     console.log('🔎 Searching for:', query);

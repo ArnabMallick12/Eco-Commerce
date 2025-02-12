@@ -5,6 +5,7 @@ import { RewardsTracker } from '../components/RewardsTracker';
 
 import { ProductCard } from '../components/ProductCard';
 
+const API_URL = "https://eco-commerce-2vxl.onrender.com";
 const categories = [
   { name: 'Furniture', icon: Sofa, path: '/category/furniture' },
   { name: 'Lighting', icon: Lamp, path: '/category/lighting' },
@@ -39,7 +40,7 @@ export default function Home() {
   useEffect(() => {
     const checkServerConnection = async () => {
       try {
-        const response = await fetch('/api/status');
+        const response = await fetch(`${API_URL}/api/status`);
         if (!response.ok) throw new Error('Server not responding');
         const data = await response.json();
         setIsServerConnected(data.mongoConnection === 'connected');
@@ -74,7 +75,7 @@ export default function Home() {
         const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         const response = await fetch(
-          `/api/products/search?query=${encodeURIComponent(debouncedQuery)}`,
+          `${API_URL}/api/products/search?query=${encodeURIComponent(debouncedQuery)}`,
           { signal: controller.signal }
         );
 
