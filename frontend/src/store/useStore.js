@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 // Backend URL
-const API_URL = "http://localhost:5000";
+const API_URL = "https://eco-commerce-2vxl.onrender.com";
 
 export const useStore = create((set, get) => ({
   cart: [],
