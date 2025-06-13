@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Leaf } from 'lucide-react';
 import { useStore } from "../store/useStore";
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 export const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const setUser = useStore((state) => state.setUser);
+  const setLoading = useStore((state) => state.setLoading);
+  const showNotification = useStore((state) => state.showNotification);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -19,21 +22,24 @@ export const Login = () => {
     setError(""); // ✅ Reset error state
   
     try {
+      setLoading(true);
+      showNotification(isLogin ? "Logging in..." : "Creating account...", "info");
+
       const endpoint = isLogin ? "/login" : "/signup";
       const payload = isLogin
         ? { email: formData.email, password: formData.password }
         : formData;
   
-      console.log("📦 Sending data to backend:", payload); // ✅ Debugging log
+      console.log("📦 Sending data to backend:", payload);
   
-      const response = await fetch(`https://eco-commerce-2vxl.onrender.com/auth${endpoint}`, {
+      const response = await fetch(`http://localhost:5000/auth${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
   
       const data = await response.json();
-      console.log("✅ Received response from backend:", data); // ✅ Debugging log
+      console.log("✅ Received response from backend:", data);
   
       if (!response.ok) {
         throw new Error(data.msg || "Something went wrong!");
@@ -43,19 +49,28 @@ export const Login = () => {
         throw new Error("Invalid response from server (missing user data)");
       }
   
+      // ✅ Store user data
       localStorage.setItem("token", data.token);
       localStorage.setItem("userEmail", data.user.email);
       localStorage.setItem("userId", data.user.id);
       setUser(data.user);
       localStorage.setItem("user", JSON.stringify(data.user));
+
+      showNotification(
+        isLogin ? "Welcome back! 🎉" : "Account created successfully! 🎉",
+        "success"
+      );
+      
       navigate("/");
     } catch (error) {
       console.error("❌ Login/Signup Error:", error);
-      setError(error.message); // ✅ Display error in UI
+      setError(error.message);
+      showNotification(error.message, "error");
+    } finally {
+      setLoading(false);
     }
   };
   
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -106,12 +121,21 @@ export const Login = () => {
               />
             </div>
 
+            {error && (
+              <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
+
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                disabled={useStore.getState().isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLogin ? 'Sign in' : 'Sign up'}
+                {useStore.getState().isLoading ? (
+                  <LoadingSpinner size={20} className="text-white" />
+                ) : (
+                  isLogin ? 'Sign in' : 'Sign up'
+                )}
               </button>
             </div>
           </form>
@@ -119,7 +143,8 @@ export const Login = () => {
           <div className="mt-6">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="w-full text-center text-sm text-green-600 hover:text-green-500"
+              disabled={useStore.getState().isLoading}
+              className="w-full text-center text-sm text-green-600 hover:text-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLogin
                 ? "Don't have an account? Sign up"

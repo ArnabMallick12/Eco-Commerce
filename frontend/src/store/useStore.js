@@ -1,14 +1,43 @@
 import { create } from "zustand";
 
 // Backend URL
-const API_URL = "https://eco-commerce-2vxl.onrender.com/cart";
+const API_URL = "http://localhost:5000";
 
 export const useStore = create((set, get) => ({
   cart: [],
   user: JSON.parse(localStorage.getItem("user")) || null,
-  setUser: (user) => set({ user }),
+  setUser: (userData) => {
+    if (!userData) {
+      set({ user: null });
+      return;
+    }
+    
+    // ✅ Ensure rewardPoints is included
+    const user = {
+      ...userData,
+      rewardPoints: userData.rewardPoints || 0
+    };
+    
+    // ✅ Update localStorage
+    localStorage.setItem("user", JSON.stringify(user));
+    
+    // ✅ Update store state
+    set({ user });
+  },
   purchaseHistory: [],
   totalCarbonFootprint: 0,
+  isLoading: false,
+  notification: null,
+
+  // ✅ Set Loading State
+  setLoading: (isLoading) => set({ isLoading }),
+
+  // ✅ Show Notification
+  showNotification: (message, type = 'success') => {
+    set({ notification: { message, type } });
+    // Auto hide after 3 seconds
+    setTimeout(() => set({ notification: null }), 3000);
+  },
 
   // ✅ Fetch User Rewards, Purchase History & Carbon Footprint
   fetchUserData: async () => {
@@ -16,43 +45,42 @@ export const useStore = create((set, get) => ({
     if (!user) return;
 
     try {
-      const response = await fetch(`https://eco-commerce-2vxl.onrender.com/user/${user.id}/rewards`);
-      const data = await response.json();
-
-      console.log("🏆 Updated user data after checkout:", data);
-
-      set({
-        user: { ...user, rewardPoints: data.rewardPoints },
-        purchaseHistory: data.purchaseHistory || [],
-        totalCarbonFootprint: data.totalCarbonFootprint || 0, // ✅ Pehle ka total carbon footprint bhi add
+      const response = await fetch(`${API_URL}/user/${user.id}/rewards`);
+      if (!response.ok) throw new Error("Failed to fetch user data");
+      
+      const userData = await response.json();
+      console.log("✅ Fetched user data:", userData);
+      
+      // ✅ Update user data in localStorage
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (storedUser) {
+        storedUser.rewardPoints = userData.rewardPoints;
+        localStorage.setItem("user", JSON.stringify(storedUser));
+      }
+      
+      // ✅ Update store state
+      set({ 
+        user: { ...user, rewardPoints: userData.rewardPoints },
+        purchaseHistory: userData.purchaseHistory || []
       });
     } catch (error) {
-      console.error("❌ Error fetching updated user data:", error);
+      console.error("❌ Error fetching user data:", error);
     }
   },
 
-  // ✅ Fetch Purchase History & Carbon Footprint
+  // ✅ Fetch Purchase History
   fetchPurchaseHistory: async () => {
     const user = get().user;
     if (!user) return;
 
     try {
-      const response = await fetch(`https://eco-commerce-2vxl.onrender.com/orders/${user.id}`);
+      const response = await fetch(`${API_URL}/user/${user.id}/rewards`);
+      if (!response.ok) throw new Error("Failed to fetch purchase history");
+      
       const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || "Failed to fetch orders");
-
-      const previousCarbonFootprint = data.orders.reduce(
-        (total, order) => total + (order.totalCarbonFootprint || 0),
-        0
-      );
-
-      set({
-        purchaseHistory: data.orders || [],
-        totalCarbonFootprint: previousCarbonFootprint, // ✅ Pichle orders ka total carbon footprint
-      });
-
-      console.log("📜 Purchase history updated:", get().purchaseHistory);
+      console.log("✅ Fetched purchase history:", data);
+      
+      set({ purchaseHistory: data.purchaseHistory || [] });
     } catch (error) {
       console.error("❌ Error fetching purchase history:", error);
     }
@@ -87,48 +115,39 @@ export const useStore = create((set, get) => ({
   addToCart: async (product) => {
     const user = get().user;
     if (!user) {
-      alert("Please log in to add items to your cart.");
+      get().showNotification("Please login to add items to cart", "error");
       return;
-    }
-
-    if (!product || !product._id) {
-      alert("Error: Product ID is missing!");
-      return;
-    }
-
-    if (typeof product.rewardPoints === "undefined") {
-      console.warn("⚠️ Missing rewardPoints in product:", product);
-      return alert("Error: This product is missing reward points.");
     }
 
     try {
-      const response = await fetch(`${API_URL}/add`, {
+      get().setLoading(true);
+      get().showNotification("Adding to cart...", "info");
+
+      const response = await fetch(`${API_URL}/cart/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, productId: product._id }),
+        body: JSON.stringify({
+          userId: user.id,
+          productId: product._id
+        }),
       });
 
+      if (!response.ok) throw new Error("Failed to add item to cart");
+
       const data = await response.json();
-      console.log("🔄 Response from server:", data);
+      console.log("✅ Added to cart:", data);
 
-      if (!response.ok) throw new Error(data.error || "Failed to add item");
-
-      const newItem = {
-        _id: product._id,
-        name: product.name,
-        price: product.price,
-        rewardPoints: product.rewardPoints,
-        carbonFootprint: product.carbonFootprint,
-        imageUrl: product.imageUrl,
-      };
-
+      // ✅ Update local cart state
       set((state) => ({
-        cart: [...state.cart, newItem],
+        cart: [...state.cart, product],
       }));
 
-      console.log("✅ Updated cart:", get().cart);
+      get().showNotification("Added to cart successfully! 🛒", "success");
     } catch (error) {
       console.error("❌ Error adding to cart:", error);
+      get().showNotification("Failed to add item to cart", "error");
+    } finally {
+      get().setLoading(false);
     }
   },
 
@@ -138,74 +157,133 @@ export const useStore = create((set, get) => ({
     if (!user) return;
 
     try {
-      const response = await fetch(`${API_URL}/remove`, {
+      get().setLoading(true);
+      get().showNotification("Removing from cart...", "info");
+
+      const response = await fetch(`${API_URL}/cart/remove`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, productId }),
+        body: JSON.stringify({
+          userId: user.id,
+          productId
+        }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to remove item");
+      if (!response.ok) throw new Error("Failed to remove item from cart");
 
+      const data = await response.json();
+      console.log("✅ Removed from cart:", data);
+
+      // ✅ Update local cart state
       set((state) => ({
         cart: state.cart.filter((item) => item._id !== productId),
       }));
 
-      console.log("✅ Item removed successfully:", data);
+      get().showNotification("Item removed from cart", "success");
     } catch (error) {
-      console.error("❌ Error removing item:", error);
+      console.error("❌ Error removing from cart:", error);
+      get().showNotification("Failed to remove item from cart", "error");
+    } finally {
+      get().setLoading(false);
     }
   },
 
   // ✅ Complete Purchase (Checkout)
   completePurchase: async () => {
     const user = get().user;
-    if (!user) return alert("User not authenticated");
+    if (!user) {
+      get().showNotification("Please login to complete purchase", "error");
+      return;
+    }
 
     try {
+      get().setLoading(true);
+      get().showNotification("Processing your order...", "info");
+
       // ✅ Fetch the latest cart from the database
-      const cartResponse = await fetch(`${API_URL}/${user.id}`);
+      const cartResponse = await fetch(`${API_URL}/cart/${user.id}`);
       const cartData = await cartResponse.json();
 
       if (!cartResponse.ok || !cartData.items || !Array.isArray(cartData.items)) {
         console.error("❌ Error fetching cart from database:", cartData);
-        return alert("Error: Could not retrieve cart details from the database.");
+        get().showNotification("Error: Could not retrieve cart details", "error");
+        return;
       }
 
       const cart = cartData.items;
 
-      if (cart.length === 0) return alert("Cart is empty");
-
-      console.log("🛒 Using database cart for checkout:", JSON.stringify(cart, null, 2));
+      if (cart.length === 0) {
+        get().showNotification("Your cart is empty", "error");
+        return;
+      }
 
       // ✅ Send checkout request using cart from database
-      const checkoutResponse = await fetch("https://eco-commerce-2vxl.onrender.com/checkout", {
+      const checkoutResponse = await fetch(`${API_URL}/cart/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, cart }),
+        body: JSON.stringify({ userId: user.id }),
       });
 
-      const checkoutData = await checkoutResponse.json();
-      if (!checkoutResponse.ok) throw new Error(checkoutData.error || "Checkout failed");
+      const responseData = await checkoutResponse.json();
+      
+      if (!checkoutResponse.ok) {
+        console.error("❌ Checkout failed:", {
+          status: checkoutResponse.status,
+          statusText: checkoutResponse.statusText,
+          data: responseData
+        });
+        throw new Error(responseData.error || "Checkout failed");
+      }
 
-      console.log("✅ Checkout successful:", checkoutData);
+      console.log("✅ Checkout successful:", responseData);
 
-      // ✅ Fetch updated user rewards
-      await get().fetchUserData();
-      await get().fetchPurchaseHistory();
+      // ✅ Update user data with new reward points from checkout response
+      const updatedUser = {
+        ...user,
+        rewardPoints: responseData.newRewardPoints
+      };
 
-      // ✅ **Carbon Footprint Update** (Adding new order's footprint)
-      const newCarbonFootprint = cart.reduce((total, item) => total + (item.carbonFootprint || 0), 0);
-      set((state) => ({
-        totalCarbonFootprint: state.totalCarbonFootprint + newCarbonFootprint, // ✅ Total Carbon Footprint Update
-      }));
+      // ✅ Update localStorage
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      // ✅ Clear cart in Zustand state (Frontend cart)
-      set({ cart: [] });
+      // ✅ Update store state
+      set({ 
+        user: updatedUser,
+        purchaseHistory: [...get().purchaseHistory, responseData.order],
+        cart: [] 
+      });
 
-      alert("Order placed successfully! Your rewards have been updated.");
+      get().showNotification("Order placed successfully! 🎉", "success");
+
+      // ✅ Navigate to success page
+      window.location.href = '/checkout-success';
     } catch (error) {
-      console.error("❌ Error during checkout:", error);
+      console.error("❌ Error during checkout:", {
+        message: error.message,
+        stack: error.stack,
+        user: user?.id
+      });
+      get().showNotification(error.message || "Error processing checkout", "error");
+    } finally {
+      get().setLoading(false);
     }
+  },
+
+  // ✅ Logout User
+  logout: () => {
+    // ✅ Clear localStorage
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userId");
+
+    // ✅ Reset store state
+    set({
+      user: null,
+      cart: [],
+      purchaseHistory: [],
+      totalCarbonFootprint: 0,
+      notification: { message: "Logged out successfully", type: "success" }
+    });
   },
 }));

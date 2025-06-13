@@ -7,11 +7,14 @@ import CategoryPage from './pages/CategoryPage';
 import { Cart } from './pages/Cart';
 import { CheckoutSuccess } from './pages/CheckoutSuccess';
 import  AddProduct  from './components/AddProduct';
+import Profile from './pages/Profile';
+import { Notification } from './components/Notification';
 
 function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
+        <Notification />
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -20,6 +23,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout-success" element={<CheckoutSuccess />} />
           <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
     </Router>

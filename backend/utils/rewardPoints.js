@@ -22,7 +22,22 @@ const materialEmissionFactors = {
   bamboo: 1.20,
   ceramic: 3.20,
   jute: 1.50,
-  cork: 1.00
+  cork: 1.00,
+  // Add more common materials
+  wood: 0.50,
+  plastic: 3.00,
+  metal: 2.00,
+  fabric: 2.50,
+  paper: 0.80,
+  leather: 4.00,
+  stone: 1.50,
+  concrete: 1.20,
+  clay: 0.90,
+  rattan: 0.70,
+  wicker: 0.60,
+  recycled_plastic: 2.50,
+  recycled_wood: 0.40,
+  organic_cotton: 1.80
 };
 
 /**
@@ -36,27 +51,50 @@ const calculateRewardPoints = (material, weight, sizeFactor) => {
     return 0; // Default points
   }
 
-  const materialKey = material.toLowerCase().replace(/\s+/g, "_"); // Normalize key
-  const emissionFactor = materialEmissionFactors[materialKey] || 5.0; // Default if missing
+  // Normalize material key
+  const materialKey = material.toLowerCase().trim().replace(/\s+/g, "_");
+  console.log("🔍 Normalized material key:", materialKey);
+  
+  const emissionFactor = materialEmissionFactors[materialKey];
+  console.log("📊 Emission factor for material:", emissionFactor);
+  
+  if (emissionFactor === undefined) {
+    console.error("❌ Material not found in database:", materialKey);
+    return 0;
+  }
 
   // Base points: Inversely proportional to emissions (low emission = high reward)
   let basePoints = Math.round((10 / emissionFactor) * 100);
+  console.log("💫 Base points:", basePoints);
 
   // Bonus points for highly sustainable materials
-  if (emissionFactor < 1) basePoints += 50;
-  else if (emissionFactor < 2) basePoints += 30;
-  else if (emissionFactor < 3) basePoints += 15;
+  let materialBonus = 0;
+  if (emissionFactor < 1) materialBonus = 50;
+  else if (emissionFactor < 2) materialBonus = 30;
+  else if (emissionFactor < 3) materialBonus = 15;
+  console.log("🌟 Material bonus points:", materialBonus);
 
   // Weight Factor (Lighter products get a small bonus)
-  const weightFactor = Math.max(10 - weight, 5); // Ensure a minimum boost
+  const weightFactor = Math.max(10 - weight, 5);
+  console.log("⚖️ Weight factor points:", weightFactor);
 
   // Size Factor (Smaller products get more points)
   const sizeFactorBonus = Math.max(20 - sizeFactor * 5, 5);
+  console.log("📏 Size factor bonus points:", sizeFactorBonus);
 
   // Total Reward Points Calculation
-  const totalPoints = Math.round(basePoints + weightFactor + sizeFactorBonus);
+  const totalPoints = Math.round(basePoints + materialBonus + weightFactor + sizeFactorBonus);
 
-  console.log(`🎯 Material: ${material}, Emission Factor: ${emissionFactor}, Reward Points: ${totalPoints}`);
+  console.log(`🎯 Final calculation:
+    Material: ${materialKey}
+    Emission Factor: ${emissionFactor}
+    Base Points: ${basePoints}
+    Material Bonus: ${materialBonus}
+    Weight Factor: ${weightFactor}
+    Size Factor Bonus: ${sizeFactorBonus}
+    Total Points: ${totalPoints}
+  `);
+
   return totalPoints;
 };
 

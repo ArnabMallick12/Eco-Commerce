@@ -58,6 +58,7 @@ const upload = multer({ storage });
 router.post("/add", upload.single("image"), async (req, res) => {
   try {
     const { name, category, description, material, weight, sizeFactor, price } = req.body;
+    console.log("📦 Received product data:", { name, category, material, weight, sizeFactor, price });
 
     if (!req.file) {
       return res.status(400).json({ error: "Image is required" });
@@ -65,14 +66,24 @@ router.post("/add", upload.single("image"), async (req, res) => {
 
     // ✅ Compute Carbon Footprint
     const material_str = material.toLowerCase();
-    console.log(material_str);
+    console.log("🔍 Processing material:", material_str);
+    
     const carbonFootprint = await calculateCarbonFootprint(material_str, weight, sizeFactor);
+    console.log("🌍 Calculated carbon footprint:", carbonFootprint);
+    
     if (carbonFootprint === null) {
       return res.status(400).json({ error: "Invalid material for emission factor" });
     }
 
     // ✅ Compute Reward Points
-    const rewardPoints = calculateRewardPoints([material_str]);;
+    console.log("🎯 Calculating reward points with:", {
+      material: material_str,
+      weight: parseFloat(weight),
+      sizeFactor: parseFloat(sizeFactor)
+    });
+    
+    const rewardPoints = calculateRewardPoints(material_str, parseFloat(weight), parseFloat(sizeFactor));
+    console.log("✨ Calculated reward points:", rewardPoints);
 
     // ✅ Image URL
     const imageUrl = `https://www.google.com/imgres?q=chair&imgurl=https%3A%2F%2Fwww.nilkamalfurniture.com%2Fcdn%2Fshop%2Ffiles%2FPARDSRDB_SRB_IVR_600x.jpg%3Fv%3D1699420541&imgrefurl=https%3A%2F%2Fwww.nilkamalfurniture.com%2Fproducts%2Fnilkamal-paradise-plastic-arm-chair-ratian-dark-beige-season-rust-brown-ivory&docid=32hw-WjSDPPKsM&tbnid=PO7JQpYPa8EJYM&vet=12ahUKEwjH3u3h2rSLAxW7bfUHHcIpMpoQM3oECBoQAA..i&w=600&h=600&hcb=2&ved=2ahUKEwjH3u3h2rSLAxW7bfUHHcIpMpoQM3oECBoQAA`;
@@ -83,12 +94,21 @@ router.post("/add", upload.single("image"), async (req, res) => {
       category,
       description,
       material,
-      weight,
-      sizeFactor,
-      price,
+      weight: parseFloat(weight),
+      sizeFactor: parseFloat(sizeFactor),
+      price: parseFloat(price),
       imageUrl,
       carbonFootprint,
       rewardPoints,
+    });
+
+    console.log("💾 Saving product with data:", {
+      name: newProduct.name,
+      material: newProduct.material,
+      weight: newProduct.weight,
+      sizeFactor: newProduct.sizeFactor,
+      carbonFootprint: newProduct.carbonFootprint,
+      rewardPoints: newProduct.rewardPoints
     });
 
     await newProduct.save();

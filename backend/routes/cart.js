@@ -2,6 +2,7 @@ const express = require("express");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const User = require("../models/User");
 const router = express.Router();
 
 // ✅ Fetch User Cart
@@ -89,15 +90,52 @@ router.delete("/remove", async (req, res) => {
 });
 
 // ✅ Checkout (Convert Cart to Order)
-// ✅ Checkout (Convert Cart to Order)
 router.post("/checkout", async (req, res) => {
   const { userId } = req.body;
 
   try {
-    const cart = await Cart.findOne({ userId }).populate("items.productId");
-    if (!cart || cart.items.length === 0) return res.status(400).json({ error: "Cart is empty" });
+    // ✅ Find user and cart
+    const [user, cart] = await Promise.all([
+      User.findById(userId),
+      Cart.findOne({ userId }).populate("items.productId")
+    ]);
 
-    // ✅ Create an order with reward points included
+    if (!user) {
+      console.error("❌ User not found:", userId);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!cart || cart.items.length === 0) {
+      console.error("❌ Cart is empty for user:", userId);
+      return res.status(400).json({ error: "Cart is empty" });
+    }
+
+    console.log("🛒 Processing checkout for user:", {
+      userId,
+      currentPoints: user.rewardPoints,
+      cartItems: cart.items.length
+    });
+
+    // ✅ Calculate totals
+    const totalPrice = cart.items.reduce((sum, item) => 
+      sum + (item.productId.price * item.quantity), 0
+    );
+    
+    const totalCarbonFootprint = cart.items.reduce((sum, item) => 
+      sum + (item.productId.carbonFootprint * item.quantity), 0
+    );
+    
+    const earnedRewardPoints = cart.items.reduce((sum, item) => 
+      sum + (item.productId.rewardPoints * item.quantity), 0
+    );
+
+    console.log("💰 Calculated totals:", {
+      totalPrice,
+      totalCarbonFootprint,
+      earnedRewardPoints
+    });
+
+    // ✅ Create order
     const order = new Order({
       userId,
       products: cart.items.map(item => ({
@@ -106,18 +144,40 @@ router.post("/checkout", async (req, res) => {
         price: item.productId.price,
         carbonFootprint: item.productId.carbonFootprint,
         quantity: item.quantity,
-        rewardPoints: item.productId.rewardPoints, // ✅ Ensure this is saved
+        rewardPoints: item.productId.rewardPoints
       })),
-      totalPrice: cart.items.reduce((sum, item) => sum + item.productId.price * item.quantity, 0),
-      totalCarbonFootprint: cart.items.reduce((sum, item) => sum + item.productId.carbonFootprint * item.quantity, 0),
-      rewardPoints: cart.items.reduce((sum, item) => sum + item.productId.rewardPoints * item.quantity, 0),
+      totalPrice,
+      totalCarbonFootprint,
+      rewardPoints: earnedRewardPoints
     });
 
-    await order.save();
-    await Cart.findOneAndDelete({ userId });
+    // ✅ Update user's reward points
+    user.rewardPoints = (user.rewardPoints || 0) + earnedRewardPoints;
+    
+    // ✅ Save both order and user updates
+    await Promise.all([
+      order.save(),
+      user.save(),
+      Cart.findOneAndDelete({ userId })
+    ]);
 
-    res.json({ message: "Order placed successfully!", order });
+    console.log("✅ Checkout completed:", {
+      orderId: order._id,
+      newUserPoints: user.rewardPoints,
+      earnedPoints: earnedRewardPoints
+    });
+
+    res.json({ 
+      message: "Order placed successfully!", 
+      order,
+      newRewardPoints: user.rewardPoints
+    });
   } catch (error) {
+    console.error("❌ Checkout error:", {
+      message: error.message,
+      stack: error.stack,
+      userId
+    });
     res.status(500).json({ error: "Error processing checkout" });
   }
 });
