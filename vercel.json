@@ -9,7 +9,7 @@
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "npm install && npm install -g npm@latest && npm run build",
+  "buildCommand": "npm install && npx vite build",
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "npm install"
