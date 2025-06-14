@@ -24,7 +24,7 @@ export default defineConfig({
         target: 'https://eco-commerce-2vxl.onrender.com',
         changeOrigin: true,
         secure: false,
-      }
-    }
-  }
+      },
+    },
+  },
 }) 
